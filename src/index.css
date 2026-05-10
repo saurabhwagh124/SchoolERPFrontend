@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-blue: #00AEEF;
-  --color-brand-yellow: #FFD700;
-  --color-brand-green: #228B22;
+  --color-brand-primary: #0C3E26;
+  --color-brand-secondary: #F7C35F;
+  --color-brand-accent: #E91E63;
+  --color-brand-success: #43A047;
+  --color-brand-blue: #2196F3;
+  --color-brand-dark: #1A2B23;
 
   --font-heading: "Fredoka", sans-serif;
   --font-body: "Inter", sans-serif;
 
-  --radius-2xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
 @layer base {
@@ -23,7 +26,7 @@
   }
 
   .star-gradient {
-    @apply bg-gradient-to-br from-brand-blue to-sky-400;
+    @apply bg-gradient-to-br from-brand-primary to-brand-secondary;
   }
 }
 

@@ -10,7 +10,7 @@ export const PublicLayout = () => {
       </main>
       <footer className="bg-white border-t border-slate-100 py-12 mt-20">
         <div className="container mx-auto px-6 text-center text-slate-500">
-          <p>&copy; 2026 Star School ERP. Every child is a star.</p>
+          <p>&copy; 2026 Little Star Kids Academy. Every child is a star.</p>
         </div>
       </footer>
     </div>

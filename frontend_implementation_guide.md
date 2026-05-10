@@ -1,4 +1,4 @@
-# Lead Frontend Architect's Implementation Guide: Star School ERP & Web Portal
+# Lead Frontend Architect's Implementation Guide: Little Star Kids Academy ERP & Web Portal
 
 This document serves as the master blueprint for the frontend development. It contains the visual DNA, technical architecture, and implementation roadmap required to build a premium, responsive, and star-themed EdTech platform.
 

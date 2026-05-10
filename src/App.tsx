@@ -2,6 +2,31 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PublicLayout } from './layouts/PublicLayout';
 import { HomePage } from './pages/public/HomePage';
 import { AdmissionsPage } from './pages/public/AdmissionsPage';
+import { AboutPage } from './pages/public/AboutPage';
+import { ContactPage } from './pages/public/ContactPage';
+import { LoginPage } from './pages/public/LoginPage';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import { OverviewPage } from './pages/dashboard/OverviewPage';
+import { AttendancePage } from './pages/dashboard/AttendancePage';
+import { FeesPage } from './pages/dashboard/FeesPage';
+import { AdmissionsListPage } from './pages/dashboard/AdmissionsListPage';
+import { StudentsPage } from './pages/dashboard/StudentsPage';
+import { TimetablePage } from './pages/dashboard/TimetablePage';
+import { ResultsPage } from './pages/dashboard/ResultsPage';
+import { EventsPage } from './pages/dashboard/EventsPage';
+import { useAuth } from './context/AuthContext';
+import { Navigate } from 'react-router-dom';
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  // Fallback to localStorage check to prevent race conditions during state updates
+  const hasToken = isAuthenticated || !!localStorage.getItem('token');
+
+  if (!hasToken) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 function App() {
   return (
@@ -11,12 +36,26 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/admissions" element={<AdmissionsPage />} />
-          <Route path="/about" element={<div className="pt-32 text-center h-screen">About Us Page (Coming Soon)</div>} />
-          <Route path="/contact" element={<div className="pt-32 text-center h-screen">Contact Page (Coming Soon)</div>} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<LoginPage />} />
         </Route>
 
-        {/* Dashboard Routes (To be implemented in Phase B) */}
-        <Route path="/dashboard" element={<div>Dashboard Layout (Coming Soon)</div>} />
+        {/* Dashboard Routes (Phase B) */}
+        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<OverviewPage />} />
+          <Route path="/dashboard/attendance" element={<AttendancePage />} />
+          <Route path="/dashboard/students" element={<StudentsPage />} />
+          <Route path="/dashboard/timetable" element={<TimetablePage />} />
+          <Route path="/dashboard/fees" element={<FeesPage />} />
+          <Route path="/dashboard/admissions" element={<AdmissionsListPage />} />
+          <Route path="/dashboard/results" element={<ResultsPage />} />
+          <Route path="/dashboard/events" element={<EventsPage />} />
+          <Route path="/dashboard/settings" element={<div>Settings Coming Soon</div>} />
+        </Route>
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

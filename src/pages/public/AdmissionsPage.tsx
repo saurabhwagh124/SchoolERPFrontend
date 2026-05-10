@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
-import { CheckCircle2, User, Book, FileUp } from 'lucide-react';
+import { CheckCircle2, User, Book, FileUp, Loader2 } from 'lucide-react';
+import { admissionService } from '../../services/admissionService';
 
 export const AdmissionsPage = () => {
   const [step, setStep] = useState(1);
@@ -17,6 +18,8 @@ export const AdmissionsPage = () => {
     aadhaarCard: null as File | null,
     birthCertificate: null as File | null,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
@@ -25,11 +28,27 @@ export const AdmissionsPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In Phase B, we will use FormData to send to backend API
-    alert("Application submitted successfully! (Mock)");
-    nextStep();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Map frontend fields to backend expected fields
+      await admissionService.submitAdmission({
+        name: formData.studentName,
+        email: formData.email || `admission_${Date.now()}@example.com`, // Fallback for now
+        date_of_birth: formData.dateOfBirth,
+        gender: 'Not Specified', // Add to UI later if needed
+        contact_number: formData.phone,
+        address: formData.previousSchool || 'N/A'
+      });
+      nextStep();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const steps = [
@@ -52,12 +71,11 @@ export const AdmissionsPage = () => {
           <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -translate-y-1/2 -z-10" />
           {steps.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                step >= i + 1 ? 'bg-brand-blue border-brand-blue text-white' : 'bg-white border-slate-200 text-slate-400'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${step >= i + 1 ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white border-slate-200 text-slate-400'
+                }`}>
                 {s.icon}
               </div>
-              <span className={`text-sm font-medium ${step >= i + 1 ? 'text-brand-blue' : 'text-slate-400'}`}>
+              <span className={`text-sm font-medium ${step >= i + 1 ? 'text-brand-primary' : 'text-slate-400'}`}>
                 {s.name}
               </span>
             </div>
@@ -78,38 +96,38 @@ export const AdmissionsPage = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Student Full Name</label>
-                    <input 
-                      type="text" 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none" 
+                    <input
+                      type="text"
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
                       placeholder="John Doe"
                       value={formData.studentName}
-                      onChange={(e) => setFormData({...formData, studentName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Date of Birth</label>
-                    <input 
-                      type="date" 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none"
-                      onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                    <input
+                      type="date"
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Parent/Guardian Name</label>
-                    <input 
-                      type="text" 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none"
+                    <input
+                      type="text"
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
                       placeholder="Jane Doe"
-                      onChange={(e) => setFormData({...formData, parentName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Phone Number</label>
-                    <input 
-                      type="tel" 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none"
+                    <input
+                      type="tel"
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
                       placeholder="+1 (555) 000-0000"
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
                 </div>
@@ -131,9 +149,9 @@ export const AdmissionsPage = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Grade Applying For</label>
-                    <select 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none"
-                      onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                    <select
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
+                      onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                     >
                       <option value="">Select Grade</option>
                       <option value="1">Grade 1</option>
@@ -144,11 +162,11 @@ export const AdmissionsPage = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-slate-700">Previous School Attended</label>
-                    <input 
-                      type="text" 
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none"
+                    <input
+                      type="text"
+                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none"
                       placeholder="Greenwood International"
-                      onChange={(e) => setFormData({...formData, previousSchool: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, previousSchool: e.target.value })}
                     />
                   </div>
                 </div>
@@ -169,21 +187,24 @@ export const AdmissionsPage = () => {
               >
                 <h2 className="text-2xl font-bold font-heading text-slate-900 mb-6">Document Upload</h2>
                 <div className="space-y-4">
-                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center transition-colors hover:border-brand-blue cursor-pointer">
+                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center transition-colors hover:border-brand-primary cursor-pointer">
                     <FileUp className="w-12 h-12 text-slate-400 mb-4" />
                     <p className="font-bold text-slate-700">Upload Birth Certificate</p>
                     <p className="text-sm text-slate-500">PDF, JPG or PNG (Max 5MB)</p>
                   </div>
-                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center transition-colors hover:border-brand-blue cursor-pointer">
+                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center transition-colors hover:border-brand-primary cursor-pointer">
                     <FileUp className="w-12 h-12 text-slate-400 mb-4" />
                     <p className="font-bold text-slate-700">Upload Aadhaar Card / ID Proof</p>
                     <p className="text-sm text-slate-500">PDF, JPG or PNG (Max 5MB)</p>
                   </div>
                 </div>
                 <div className="flex justify-between pt-6">
-                  <StarButton variant="outline" onClick={prevStep}>Previous</StarButton>
-                  <StarButton variant="primary" onClick={handleSubmit}>Submit Application</StarButton>
+                  <StarButton variant="outline" onClick={prevStep} disabled={loading}>Previous</StarButton>
+                  <StarButton variant="primary" onClick={handleSubmit} disabled={loading}>
+                    {loading ? <Loader2 className="animate-spin" /> : 'Submit Application'}
+                  </StarButton>
                 </div>
+                {error && <p className="text-red-500 text-sm mt-4 text-center font-bold">{error}</p>}
               </motion.div>
             )}
 
@@ -194,12 +215,12 @@ export const AdmissionsPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-center py-12"
               >
-                <div className="w-20 h-20 bg-brand-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="w-12 h-12 text-brand-green" />
+                <div className="w-20 h-20 bg-brand-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 className="w-12 h-12 text-brand-success" />
                 </div>
                 <h2 className="text-3xl font-bold font-heading text-slate-900 mb-2">Application Submitted!</h2>
                 <p className="font-body text-slate-600 mb-8">
-                  Thank you for applying to Star School. Our admissions team will review your application and contact you within 3-5 business days.
+                  Thank you for applying to Little Star Kids Academy. Our admissions team will review your application and contact you within 3-5 business days.
                 </p>
                 <StarButton variant="primary" onClick={() => window.location.href = '/'}>
                   Back to Home
