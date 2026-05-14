@@ -4,23 +4,27 @@ import { FileText, Download, TrendingUp, Award, Search, Filter, BookOpen } from 
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { AddReportCardModal } from '../../components/erp/AddReportCardModal';
 
 export const ResultsPage = () => {
   const [reportCards, setReportCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchResults = async () => {
+    setLoading(true);
+    try {
+      const response = await erpService.getReportCards();
+      setReportCards(response.data || []);
+    } catch (error) {
+      console.error('Error fetching report cards:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const response = await erpService.getReportCards();
-        setReportCards(response.data || []);
-      } catch (error) {
-        console.error('Error fetching report cards:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchResults();
   }, []);
 
@@ -33,8 +37,8 @@ export const ResultsPage = () => {
   };
 
   const filteredResults = reportCards.filter(rc => 
-    rc.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rc.subject_name.toLowerCase().includes(searchTerm.toLowerCase())
+    rc.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    rc.subject_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -48,11 +52,17 @@ export const ResultsPage = () => {
           <StarButton variant="outline" className="flex items-center gap-2">
             <Filter size={18} /> Filter Term
           </StarButton>
-          <StarButton variant="primary" className="flex items-center gap-2">
+          <StarButton variant="primary" className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
             <Award size={18} /> Release Results
           </StarButton>
         </div>
       </div>
+
+      <AddReportCardModal 
+        isOpen={showAddModal} 
+        onClose={() => setShowAddModal(false)} 
+        onSuccess={fetchResults}
+      />
 
       <div className="grid md:grid-cols-4 gap-6">
         <GlassCard className="bg-white border-none shadow-md p-6 flex flex-col items-center text-center">

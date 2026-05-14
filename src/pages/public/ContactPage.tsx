@@ -1,9 +1,20 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
-import { Phone, Mail, MapPin, Send, MessageSquare } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, MessageSquare, Loader2 } from 'lucide-react';
+import { erpService } from '../../services/erpService';
 
 export const ContactPage = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: 'General Inquiry',
+    message: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6 text-brand-primary" />,
@@ -25,9 +36,23 @@ export const ContactPage = () => {
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Message sent! We will get back to you soon.");
+    setLoading(true);
+    try {
+      await erpService.fileComplaint({
+        title: formData.subject,
+        description: `From: ${formData.name} (${formData.email})\n\n${formData.message}`,
+        category: formData.subject.toLowerCase().includes('admission') ? 'admission' : 'general'
+      });
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: 'General Inquiry', message: '' });
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+      alert('Failed to send message. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,53 +129,91 @@ export const ContactPage = () => {
               className="lg:col-span-2"
             >
               <GlassCard className="bg-white border-none shadow-2xl p-10">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-bold text-slate-700">Full Name</label>
-                      <input 
-                        type="text" 
-                        required
-                        className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all" 
-                        placeholder="Your name"
-                      />
+                {submitted ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-20 h-20 bg-brand-success/10 text-brand-success rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Send size={40} />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-bold text-slate-700">Email Address</label>
-                      <input 
-                        type="email" 
-                        required
-                        className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all" 
-                        placeholder="your@email.com"
-                      />
+                    <h3 className="text-3xl font-bold text-slate-900 mb-4">Message Sent!</h3>
+                    <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                      Thank you for reaching out. Our team will review your inquiry and get back to you within 24 hours.
+                    </p>
+                    <StarButton variant="outline" onClick={() => setSubmitted(false)}>
+                      Send Another Message
+                    </StarButton>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-bold text-slate-700">Full Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all" 
+                          placeholder="Your name"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-bold text-slate-700">Email Address</label>
+                        <input 
+                          type="email" 
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all" 
+                          placeholder="your@email.com"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-bold text-slate-700">Subject</label>
-                    <select className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all">
-                      <option>General Inquiry</option>
-                      <option>Admissions Question</option>
-                      <option>Fee Structure</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Subject</label>
+                      <select 
+                        value={formData.subject}
+                        onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                        className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
+                      >
+                        <option>General Inquiry</option>
+                        <option>Admissions Question</option>
+                        <option>Fee Structure</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
 
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-bold text-slate-700">Message</label>
-                    <textarea 
-                      rows={5}
-                      required
-                      className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all resize-none" 
-                      placeholder="How can we help you?"
-                    ></textarea>
-                  </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-slate-700">Message</label>
+                      <textarea 
+                        rows={5}
+                        required
+                        value={formData.message}
+                        onChange={(e) => setFormData({...formData, message: e.target.value})}
+                        className="p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary outline-none transition-all resize-none" 
+                        placeholder="How can we help you?"
+                      ></textarea>
+                    </div>
 
-                  <StarButton type="submit" variant="primary" className="w-full md:w-auto flex items-center justify-center gap-2">
-                    <Send className="w-4 h-4" />
-                    Send Message
-                  </StarButton>
-                </form>
+                    <StarButton 
+                      type="submit" 
+                      variant="primary" 
+                      disabled={loading}
+                      className="w-full md:w-auto flex items-center justify-center gap-2"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                      {loading ? 'Sending...' : 'Send Message'}
+                    </StarButton>
+                  </form>
+                )}
               </GlassCard>
             </motion.div>
           </div>

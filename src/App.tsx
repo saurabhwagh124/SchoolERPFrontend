@@ -14,6 +14,9 @@ import { StudentsPage } from './pages/dashboard/StudentsPage';
 import { TimetablePage } from './pages/dashboard/TimetablePage';
 import { ResultsPage } from './pages/dashboard/ResultsPage';
 import { EventsPage } from './pages/dashboard/EventsPage';
+import { ClassesPage } from './pages/dashboard/ClassesPage';
+import { SubjectsPage } from './pages/dashboard/SubjectsPage';
+import { LeavesPage } from './pages/dashboard/LeavesPage';
 import { useAuth } from './context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -51,6 +54,9 @@ function App() {
           <Route path="/dashboard/admissions" element={<AdmissionsListPage />} />
           <Route path="/dashboard/results" element={<ResultsPage />} />
           <Route path="/dashboard/events" element={<EventsPage />} />
+          <Route path="/dashboard/classes" element={<ClassesPage />} />
+          <Route path="/dashboard/subjects" element={<SubjectsPage />} />
+          <Route path="/dashboard/leaves" element={<LeavesPage />} />
           <Route path="/dashboard/settings" element={<div>Settings Coming Soon</div>} />
         </Route>
 

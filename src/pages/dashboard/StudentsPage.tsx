@@ -4,28 +4,32 @@ import { Search, UserPlus, MoreVertical, Filter, GraduationCap, Mail, Phone } fr
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { AddStudentModal } from '../../components/erp/AddStudentModal';
 
 export const StudentsPage = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const response = await erpService.getStudents();
+      setStudents(response.data || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await erpService.getStudents();
-        setStudents(response.data || []);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStudents();
   }, []);
 
   const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -40,11 +44,17 @@ export const StudentsPage = () => {
           <StarButton variant="outline" className="flex items-center gap-2">
             <Filter size={18} /> Filter
           </StarButton>
-          <StarButton variant="primary" className="flex items-center gap-2">
+          <StarButton variant="primary" className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
             <UserPlus size={18} /> Enroll Student
           </StarButton>
         </div>
       </div>
+
+      <AddStudentModal 
+        isOpen={showAddModal} 
+        onClose={() => setShowAddModal(false)} 
+        onSuccess={fetchStudents}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <GlassCard className="lg:col-span-1 md:col-span-2 bg-white border-none shadow-md p-6 h-full">

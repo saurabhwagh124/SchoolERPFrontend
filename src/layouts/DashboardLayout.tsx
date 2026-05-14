@@ -33,6 +33,9 @@ export const DashboardLayout = () => {
     { name: 'Fees & Invoices', icon: <CreditCard size={20} />, path: '/dashboard/fees' },
     { name: 'Academic Results', icon: <FileText size={20} />, path: '/dashboard/results' },
     { name: 'Community Events', icon: <Star size={20} />, path: '/dashboard/events' },
+    { name: 'Classes', icon: <Users size={20} />, path: '/dashboard/classes' },
+    { name: 'Subjects', icon: <FileText size={20} />, path: '/dashboard/subjects' },
+    { name: 'Leave Management', icon: <Calendar size={20} />, path: '/dashboard/leaves' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/dashboard/settings' },
   ];
 

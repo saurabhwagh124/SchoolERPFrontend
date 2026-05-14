@@ -81,6 +81,11 @@ export const erpService = {
     return response.data;
   },
 
+  createReportCard: async (data: any) => {
+    const response = await api.post('/report-cards', data);
+    return response.data;
+  },
+
   getStudentReportCards: async (studentId: string) => {
     const response = await api.get(`/students/${studentId}/report-cards`);
     return response.data;
@@ -94,6 +99,40 @@ export const erpService = {
 
   deleteEvent: async (eventId: string) => {
     const response = await api.delete(`/events/${eventId}`);
+    return response.data;
+  },
+
+  // Payments & Fees
+  recordPayment: async (paymentData: any) => {
+    const response = await api.post('/payments', paymentData);
+    return response.data;
+  },
+
+  createFeeStructure: async (feeData: any) => {
+    const response = await api.post('/fees', feeData);
+    return response.data;
+  },
+
+  // Complaints
+  fileComplaint: async (complaintData: any) => {
+    const response = await api.post('/complaints', complaintData);
+    return response.data;
+  },
+
+  // Leaves
+  applyLeave: async (leaveData: any) => {
+    const response = await api.post('/leaves', leaveData);
+    return response.data;
+  },
+
+  // Classes & Subjects
+  createClass: async (classData: any) => {
+    const response = await api.post('/classes', classData);
+    return response.data;
+  },
+
+  createSubject: async (subjectData: any) => {
+    const response = await api.post('/subjects', subjectData);
     return response.data;
   }
 };

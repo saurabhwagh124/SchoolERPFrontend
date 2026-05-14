@@ -4,30 +4,34 @@ import { CreditCard, Download, ExternalLink, Filter, TrendingUp, AlertCircle, Ch
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { CollectFeeModal } from '../../components/erp/CollectFeeModal';
 
 export const FeesPage = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ total: 0, paid: 0, pending: 0 });
+  const [showCollectModal, setShowCollectModal] = useState(false);
+
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const response = await erpService.getInvoices();
+      const data = response.data || [];
+      setInvoices(data);
+      
+      const total = data.reduce((acc: number, inv: any) => acc + parseFloat(inv.total_amount), 0);
+      const paid = data.filter((inv: any) => inv.status === 'paid').reduce((acc: number, inv: any) => acc + parseFloat(inv.total_amount), 0);
+      const pending = total - paid;
+      
+      setSummary({ total, paid, pending });
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const response = await erpService.getInvoices();
-        const data = response.data || [];
-        setInvoices(data);
-        
-        const total = data.reduce((acc: number, inv: any) => acc + parseFloat(inv.total_amount), 0);
-        const paid = data.filter((inv: any) => inv.status === 'paid').reduce((acc: number, inv: any) => acc + parseFloat(inv.total_amount), 0);
-        const pending = total - paid;
-        
-        setSummary({ total, paid, pending });
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchInvoices();
   }, []);
 
@@ -47,11 +51,17 @@ export const FeesPage = () => {
           <StarButton variant="outline" className="flex items-center gap-2">
             <Filter size={18} /> Filter
           </StarButton>
-          <StarButton variant="primary" className="flex items-center gap-2">
+          <StarButton variant="primary" className="flex items-center gap-2" onClick={() => setShowCollectModal(true)}>
             <CreditCard size={18} /> Collect Fee
           </StarButton>
         </div>
       </div>
+
+      <CollectFeeModal 
+        isOpen={showCollectModal} 
+        onClose={() => setShowCollectModal(false)} 
+        onSuccess={fetchInvoices}
+      />
 
       <div className="grid md:grid-cols-3 gap-6">
         <GlassCard className="bg-brand-primary text-white border-none p-8 flex items-center justify-between relative overflow-hidden group">
