@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, MessageSquare, Info, Loader2 } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { useNotification } from '../ui/Notification';
 
 interface ApplyLeaveModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ApplyLeaveModalProps {
 }
 
 export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { showNotification } = useNotification();
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     leave_type: 'sick',
@@ -24,6 +26,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({ isOpen, onClos
     setSubmitting(true);
     try {
       await erpService.applyLeave(formData);
+      showNotification('Leave application submitted successfully!', 'success');
       onSuccess();
       onClose();
       setFormData({
@@ -34,7 +37,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({ isOpen, onClos
       });
     } catch (error) {
       console.error('Error applying for leave:', error);
-      alert('Failed to submit leave application. Please try again.');
+      showNotification('Failed to submit leave application. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }

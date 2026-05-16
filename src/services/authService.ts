@@ -9,5 +9,10 @@ export const authService = {
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
     return response.data;
+  },
+
+  register: async (userData: any) => {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
   }
 };

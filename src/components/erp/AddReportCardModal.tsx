@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Award, User, BookOpen, Layers, Loader2 } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { useNotification } from '../ui/Notification';
 
 interface AddReportCardModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AddReportCardModalProps {
 }
 
 export const AddReportCardModal: React.FC<AddReportCardModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { showNotification } = useNotification();
   const [students, setStudents] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,7 +77,7 @@ export const AddReportCardModal: React.FC<AddReportCardModalProps> = ({ isOpen, 
       });
     } catch (error) {
       console.error('Error creating report card:', error);
-      alert('Failed to record marks. Please try again.');
+      showNotification('Failed to record marks. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }

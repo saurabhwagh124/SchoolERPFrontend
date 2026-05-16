@@ -11,6 +11,7 @@ export const FeesPage = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ total: 0, paid: 0, pending: 0 });
   const [showCollectModal, setShowCollectModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -35,9 +36,11 @@ export const FeesPage = () => {
     fetchInvoices();
   }, []);
 
-  const handleDownload = async (id: string) => {
-    await erpService.downloadInvoice(id);
-    alert('Invoice download started!');
+  const handleDownload = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
   return (
@@ -110,8 +113,8 @@ export const FeesPage = () => {
       <GlassCard className="bg-white border-none shadow-md overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <h2 className="font-heading text-xl font-bold text-slate-900">Recent Transactions</h2>
-          <StarButton variant="outline" className="flex items-center gap-2 text-sm" onClick={() => handleDownload('ALL')}>
-            <Download size={16} /> Export CSV
+          <StarButton variant="outline" className="flex items-center gap-2 text-sm" onClick={() => window.print()}>
+            <Download size={16} /> Export View
           </StarButton>
         </div>
         <div className="overflow-x-auto">
@@ -164,13 +167,17 @@ export const FeesPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button 
-                        onClick={() => handleDownload(inv.id)}
+                        onClick={() => handleDownload(inv)}
                         className="p-2 hover:bg-brand-primary/10 text-brand-primary rounded-lg transition-all"
                         title="Download Invoice"
                       >
                         <Download size={18} />
                       </button>
-                      <button className="p-2 hover:bg-slate-100 text-slate-400 rounded-lg transition-all">
+                      <button 
+                        onClick={() => setSelectedInvoice(inv)}
+                        className="p-2 hover:bg-slate-100 text-slate-400 rounded-lg transition-all"
+                        title="View Details"
+                      >
                         <ExternalLink size={18} />
                       </button>
                     </div>
@@ -181,6 +188,83 @@ export const FeesPage = () => {
           </table>
         </div>
       </GlassCard>
+
+      {selectedInvoice && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm print:static print:bg-white print:p-0 print:block">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden print:shadow-none print:max-w-none">
+            <div className="p-8 print:hidden flex items-center justify-between border-b border-slate-100">
+              <h2 className="font-bold text-xl">Invoice Details</h2>
+              <div className="flex gap-2">
+                <StarButton variant="outline" onClick={() => window.print()}><Download size={16} className="mr-2" /> Print / Save PDF</StarButton>
+                <button onClick={() => setSelectedInvoice(null)} className="p-2 hover:bg-slate-100 rounded-full"><AlertCircle size={20} className="opacity-0" /><span className="absolute inset-0 flex items-center justify-center">X</span></button>
+              </div>
+            </div>
+            
+            <div className="p-10 print:p-0">
+              <div className="flex justify-between items-start mb-12">
+                <div>
+                  <h1 className="text-3xl font-black text-brand-primary tracking-tight">INVOICE</h1>
+                  <p className="text-sm font-bold text-slate-400 mt-1">#{selectedInvoice.id.slice(0, 8).toUpperCase()}</p>
+                </div>
+                <div className="text-right">
+                  <h3 className="font-bold text-slate-900">Little Star Kids Academy</h3>
+                  <p className="text-xs text-slate-500">123 Education Lane<br/>Cityville, State 12345</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Billed To</p>
+                  <p className="font-bold text-slate-900">Student ID: {selectedInvoice.student_id}</p>
+                  <p className="text-sm text-slate-600">Grade 10 - Section A</p>
+                </div>
+                <div className="text-right space-y-2">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Issue Date</p>
+                    <p className="font-bold text-slate-900">{new Date(selectedInvoice.issue_date).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Due Date</p>
+                    <p className="font-bold text-slate-900">{new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-8 border border-slate-200 rounded-xl overflow-hidden print:border-none print:border-y">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Description</th>
+                      <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="px-4 py-4"><p className="font-bold text-slate-900">{selectedInvoice.description || 'Academic Tuition Fee'}</p></td>
+                      <td className="px-4 py-4 text-right font-medium text-slate-900">₹{parseFloat(selectedInvoice.total_amount).toLocaleString()}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot className="bg-slate-50 font-bold">
+                    <tr>
+                      <td className="px-4 py-4 text-right text-slate-500">Total Amount</td>
+                      <td className="px-4 py-4 text-right text-xl text-brand-primary">₹{parseFloat(selectedInvoice.total_amount).toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div className="text-center">
+                <span className={`inline-block px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-widest ${
+                  selectedInvoice.status === 'paid' ? 'bg-brand-success/10 text-brand-success' : 'bg-red-100 text-red-600'
+                }`}>
+                  Status: {selectedInvoice.status}
+                </span>
+                <p className="mt-6 text-xs text-slate-400">Thank you for your timely payment.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

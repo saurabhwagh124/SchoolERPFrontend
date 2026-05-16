@@ -4,9 +4,6 @@ const API_BASE_URL = 'http://localhost:1881';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Add interceptor for Bearer token

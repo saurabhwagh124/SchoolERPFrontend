@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, Mail, Phone, MapPin, GraduationCap, Loader2 } from 'lucide-react';
+import { X, UserPlus, Mail, Phone, MapPin, BookOpen, Loader2 } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { authService } from '../../services/authService';
 import { useNotification } from '../ui/Notification';
 
-interface AddStudentModalProps {
+interface AddTeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { showNotification } = useNotification();
-  const [classes, setClasses] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: 'Password123!', // Default password for new students
-    class_id: '',
-    phone: '',
+    password: 'TeacherPassword123!',
+    role_id: '',
+    contact_number: '',
     address: '',
     gender: 'male',
     date_of_birth: ''
@@ -29,18 +30,25 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
 
   useEffect(() => {
     if (isOpen) {
-      const fetchClasses = async () => {
+      const fetchRoles = async () => {
         setLoading(true);
         try {
-          const response = await erpService.getClasses();
-          setClasses(response.data || []);
+          const response = await erpService.getRoles();
+          const rolesList = response.data || [];
+          setRoles(rolesList);
+          
+          // Pre-select Teacher role
+          const teacherRole = rolesList.find((r: any) => r.name === 'Teacher');
+          if (teacherRole) {
+            setFormData(prev => ({ ...prev, role_id: teacherRole.id }));
+          }
         } catch (error) {
-          console.error('Error fetching classes:', error);
+          console.error('Error fetching roles:', error);
         } finally {
           setLoading(false);
         }
       };
-      fetchClasses();
+      fetchRoles();
     }
   }, [isOpen]);
 
@@ -48,25 +56,23 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
     e.preventDefault();
     setSubmitting(true);
     try {
-      // Assuming authService.register handles student enrollment
-      // For now, we'll mock the enrollment or use a new endpoint if available
-      await erpService.createClass({ ...formData, role: 'student' }); // Using generic create for now
-      showNotification('Student enrolled successfully!', 'success');
+      await authService.register(formData);
+      showNotification('Teacher added successfully', 'success');
       onSuccess();
       onClose();
       setFormData({
         name: '',
         email: '',
-        password: 'Password123!',
-        class_id: '',
-        phone: '',
+        password: 'TeacherPassword123!',
+        role_id: formData.role_id, // Keep the role_id
+        contact_number: '',
         address: '',
         gender: 'male',
         date_of_birth: ''
       });
-    } catch (error) {
-      console.error('Error enrolling student:', error);
-      showNotification('Failed to enroll student. Please try again.', 'error');
+    } catch (error: any) {
+      console.error('Error adding teacher:', error);
+      showNotification(error.response?.data?.message || 'Failed to add teacher. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -92,12 +98,12 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
             <div className="p-8 bg-brand-primary text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
               <div className="flex items-center justify-between mb-2 relative z-10">
-                <h2 className="text-2xl font-bold font-heading">Enroll New Student</h2>
+                <h2 className="text-2xl font-bold font-heading">Add New Teacher</h2>
                 <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-all">
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-white/70 text-sm relative z-10">Register a new student into the school management system.</p>
+              <p className="text-white/70 text-sm relative z-10">Register a new faculty member into the school system.</p>
             </div>
             
             <form onSubmit={handleSubmit} className="p-8 grid md:grid-cols-2 gap-6">
@@ -112,7 +118,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Dr. Jane Smith"
                   />
                 </div>
 
@@ -126,7 +132,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
-                      placeholder="student@email.com"
+                      placeholder="teacher@school.com"
                     />
                   </div>
                 </div>
@@ -158,43 +164,25 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Academic & Contact</h3>
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Professional & Contact</h3>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Assign Class</label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <select 
-                      required
-                      value={formData.class_id}
-                      onChange={(e) => setFormData({...formData, class_id: e.target.value})}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
-                    >
-                      <option value="">Select Class...</option>
-                      {classes.map(cls => (
-                        <option key={cls.id} value={cls.id}>{cls.name} {cls.section}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Phone Number</label>
+                  <label className="text-sm font-bold text-slate-700">Contact Number</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
                       type="tel" 
                       required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      value={formData.contact_number}
+                      onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+91 98765 43210"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Address</label>
+                  <label className="text-sm font-bold text-slate-700">Residential Address</label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 text-slate-400" size={16} />
                     <textarea 
@@ -203,7 +191,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all resize-none"
-                      placeholder="Full residential address..."
+                      placeholder="Street, City, State..."
                     />
                   </div>
                 </div>
@@ -211,9 +199,9 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({ isOpen, onClos
 
               <div className="md:col-span-2 flex gap-4 pt-4 border-t border-slate-100">
                 <StarButton variant="outline" className="flex-1" onClick={onClose} type="button">Cancel</StarButton>
-                <StarButton variant="primary" type="submit" className="flex-1" disabled={submitting}>
+                <StarButton variant="primary" type="submit" className="flex-1" disabled={submitting || loading}>
                   {submitting ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
-                  {submitting ? 'Enrolling...' : 'Complete Enrollment'}
+                  {submitting ? 'Adding...' : 'Add Teacher'}
                 </StarButton>
               </div>
             </form>

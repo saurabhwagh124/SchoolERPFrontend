@@ -4,6 +4,7 @@ import { X, CreditCard, User, IndianRupee, Calendar, Loader2 } from 'lucide-reac
 import { GlassCard } from '../ui/GlassCard';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { useNotification } from '../ui/Notification';
 
 interface CollectFeeModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface CollectFeeModalProps {
 }
 
 export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { showNotification } = useNotification();
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -48,6 +50,7 @@ export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClos
         ...formData,
         amount: parseFloat(formData.amount)
       });
+      showNotification('Payment recorded successfully!', 'success');
       onSuccess();
       onClose();
       setFormData({
@@ -59,7 +62,7 @@ export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClos
       });
     } catch (error) {
       console.error('Error recording payment:', error);
-      alert('Failed to record payment. Please try again.');
+      showNotification('Failed to record payment. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }

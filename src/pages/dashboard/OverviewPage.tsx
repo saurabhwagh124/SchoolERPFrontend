@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Users, BookOpen, Calendar, Trophy, ArrowUpRight, TrendingUp, FileText } from 'lucide-react';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { erpService } from '../../services/erpService';
+import { AddStudentModal } from '../../components/erp/AddStudentModal';
+import { AddEventModal } from '../../components/erp/AddEventModal';
+import { CollectFeeModal } from '../../components/erp/CollectFeeModal';
 
 export const OverviewPage = () => {
   const [stats, setStats] = useState({
@@ -11,18 +14,23 @@ export const OverviewPage = () => {
     upcomingEvents: 0
   });
   const [loading, setLoading] = useState(true);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [showFeeModal, setShowFeeModal] = useState(false);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const data = await erpService.getDashboardStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await erpService.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStats();
   }, []);
 
@@ -82,27 +90,54 @@ export const OverviewPage = () => {
         <GlassCard className="bg-white border-none shadow-md p-8">
           <h2 className="font-heading text-xl font-bold text-slate-900 mb-6">Quick Actions</h2>
           <div className="space-y-4">
-            <button className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-primary/5 hover:text-brand-primary transition-all group">
+            <button 
+              onClick={() => setShowStudentModal(true)}
+              className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-primary/5 hover:text-brand-primary transition-all group"
+            >
               <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all">
                 <Users size={18} />
               </div>
               <span className="font-bold text-sm">Enroll New Student</span>
             </button>
-            <button className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-success/5 hover:text-brand-success transition-all group">
+            <button 
+              onClick={() => setShowEventModal(true)}
+              className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-success/5 hover:text-brand-success transition-all group"
+            >
               <div className="w-10 h-10 rounded-full bg-brand-success/10 flex items-center justify-center text-brand-success group-hover:bg-brand-success group-hover:text-white transition-all">
                 <Calendar size={18} />
               </div>
               <span className="font-bold text-sm">Schedule Event</span>
             </button>
-            <button className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-secondary/5 hover:text-brand-secondary transition-all group">
+            <button 
+              onClick={() => setShowFeeModal(true)}
+              className="w-full p-4 bg-slate-50 rounded-xl flex items-center gap-4 hover:bg-brand-secondary/5 hover:text-brand-secondary transition-all group"
+            >
               <div className="w-10 h-10 rounded-full bg-brand-secondary/10 flex items-center justify-center text-brand-secondary group-hover:bg-brand-secondary group-hover:text-white transition-all">
                 <FileText size={18} />
               </div>
-              <span className="font-bold text-sm">Generate Invoices</span>
+              <span className="font-bold text-sm">Collect Fee</span>
             </button>
           </div>
         </GlassCard>
       </div>
+
+      <AddStudentModal 
+        isOpen={showStudentModal} 
+        onClose={() => setShowStudentModal(false)} 
+        onSuccess={fetchStats}
+      />
+
+      <AddEventModal 
+        isOpen={showEventModal} 
+        onClose={() => setShowEventModal(false)} 
+        onSuccess={fetchStats}
+      />
+
+      <CollectFeeModal 
+        isOpen={showFeeModal} 
+        onClose={() => setShowFeeModal(false)} 
+        onSuccess={fetchStats}
+      />
     </div>
   );
 };

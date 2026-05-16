@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Tag, Loader2 } from 'lucide-react';
+import { X, BookOpen, Tag, Loader2, Layers } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { useNotification } from '../ui/Notification';
 
 interface AddSubjectModalProps {
   isOpen: boolean;
@@ -11,23 +12,29 @@ interface AddSubjectModalProps {
 }
 
 export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { showNotification } = useNotification();
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    code: ''
+    code: '',
+    category: 'Science'
   });
+
+  const categories = ['Science', 'Language', 'Social Studies', 'Arts', 'Mathematics', 'Physical Education', 'General'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       await erpService.createSubject(formData);
+      showNotification('Subject created successfully!', 'success');
       onSuccess();
       onClose();
-      setFormData({ name: '', code: '' });
-    } catch (error) {
+      setFormData({ name: '', code: '', category: 'Science' });
+    } catch (error: any) {
       console.error('Error creating subject:', error);
-      alert('Failed to create subject. Please try again.');
+      const message = error.response?.data?.message || 'Failed to create subject. It might already exist.';
+      showNotification(message, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -58,10 +65,10 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({ isOpen, onClos
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-brand-dark/60 text-sm relative z-10">Define a new subject for the school curriculum.</p>
+              <p className="text-brand-dark/60 text-sm relative z-10">Define a new subject and its category.</p>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <BookOpen size={16} className="text-brand-secondary" /> Subject Name
@@ -76,24 +83,40 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({ isOpen, onClos
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Tag size={16} className="text-brand-secondary" /> Subject Code
-                </label>
-                <input 
-                  type="text" 
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({...formData, code: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-secondary outline-none transition-all"
-                  placeholder="e.g. MATH101"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Tag size={16} className="text-brand-secondary" /> Code
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={formData.code}
+                    onChange={(e) => setFormData({...formData, code: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-secondary outline-none transition-all"
+                    placeholder="MATH101"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Layers size={16} className="text-brand-secondary" /> Category
+                  </label>
+                  <select 
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-secondary outline-none transition-all"
+                  >
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <StarButton variant="outline" className="flex-1" onClick={onClose} type="button">Cancel</StarButton>
                 <StarButton 
-                  className="flex-1 bg-brand-secondary text-brand-dark hover:bg-brand-secondary/90 shadow-lg shadow-brand-secondary/20" 
+                  className="flex-1 bg-brand-secondary text-brand-dark hover:bg-brand-secondary/90 shadow-lg shadow-brand-secondary/20 font-bold" 
                   type="submit" 
                   disabled={submitting}
                 >

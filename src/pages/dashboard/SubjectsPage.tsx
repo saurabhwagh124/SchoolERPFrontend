@@ -12,20 +12,11 @@ export const SubjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Note: erpService.getSubjects might be missing, adding a fallback or mock
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      // Assuming subjects are available via api.get('/subjects') which we might need to add to erpService
-      // For now, let's try erpService.getSubjects and fallback to mock if error
-      const response = await erpService.getClasses(); // Usually subjects are fetched via separate endpoint
-      // Mocking for now since we haven't checked if getSubjects exists in erpService
-      setSubjects([
-        { id: '1', name: 'Mathematics', code: 'MATH101', category: 'Science' },
-        { id: '2', name: 'General Science', code: 'SCI202', category: 'Science' },
-        { id: '3', name: 'English Literature', code: 'ENG303', category: 'Language' },
-        { id: '4', name: 'World History', code: 'HIS404', category: 'Social Studies' },
-      ]);
+      const response = await erpService.getSubjects();
+      setSubjects(response.data || []);
     } catch (error) {
       console.error('Error fetching subjects:', error);
     } finally {

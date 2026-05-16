@@ -19,6 +19,9 @@ import { SubjectsPage } from './pages/dashboard/SubjectsPage';
 import { LeavesPage } from './pages/dashboard/LeavesPage';
 import { useAuth } from './context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { UsersPage } from './pages/dashboard/UsersPage';
+import { SettingsPage } from './pages/dashboard/SettingsPage';
+import { TeachersPage } from './pages/dashboard/TeachersPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -49,6 +52,7 @@ function App() {
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/students" element={<StudentsPage />} />
+          <Route path="/dashboard/teachers" element={<TeachersPage />} />
           <Route path="/dashboard/timetable" element={<TimetablePage />} />
           <Route path="/dashboard/fees" element={<FeesPage />} />
           <Route path="/dashboard/admissions" element={<AdmissionsListPage />} />
@@ -57,7 +61,8 @@ function App() {
           <Route path="/dashboard/classes" element={<ClassesPage />} />
           <Route path="/dashboard/subjects" element={<SubjectsPage />} />
           <Route path="/dashboard/leaves" element={<LeavesPage />} />
-          <Route path="/dashboard/settings" element={<div>Settings Coming Soon</div>} />
+          <Route path="/dashboard/users" element={<UsersPage />} />
+          <Route path="/dashboard/settings" element={<SettingsPage />} />
         </Route>
 
         {/* Fallback Route */}

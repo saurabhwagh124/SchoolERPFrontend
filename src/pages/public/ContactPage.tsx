@@ -5,7 +5,10 @@ import { StarButton } from '../../components/ui/StarButton';
 import { Phone, Mail, MapPin, Send, MessageSquare, Loader2 } from 'lucide-react';
 import { erpService } from '../../services/erpService';
 
+import { useNotification } from '../../components/ui/Notification';
+
 export const ContactPage = () => {
+  const { showNotification } = useNotification();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,11 +48,12 @@ export const ContactPage = () => {
         description: `From: ${formData.name} (${formData.email})\n\n${formData.message}`,
         category: formData.subject.toLowerCase().includes('admission') ? 'admission' : 'general'
       });
+      showNotification('Message sent successfully!', 'success');
       setSubmitted(true);
       setFormData({ name: '', email: '', subject: 'General Inquiry', message: '' });
     } catch (error) {
       console.error('Error submitting complaint:', error);
-      alert('Failed to send message. Please try again later.');
+      showNotification('Failed to send message. Please try again later.', 'error');
     } finally {
       setLoading(false);
     }

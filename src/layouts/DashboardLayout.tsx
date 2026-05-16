@@ -25,19 +25,21 @@ export const DashboardLayout = () => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-    { name: 'Admissions', icon: <Users size={20} />, path: '/dashboard/admissions' },
-    { name: 'Students', icon: <GraduationCap size={20} />, path: '/dashboard/students' },
-    { name: 'Attendance', icon: <Calendar size={20} />, path: '/dashboard/attendance' },
-    { name: 'Academic Schedule', icon: <Clock size={20} />, path: '/dashboard/timetable' },
-    { name: 'Fees & Invoices', icon: <CreditCard size={20} />, path: '/dashboard/fees' },
-    { name: 'Academic Results', icon: <FileText size={20} />, path: '/dashboard/results' },
-    { name: 'Community Events', icon: <Star size={20} />, path: '/dashboard/events' },
-    { name: 'Classes', icon: <Users size={20} />, path: '/dashboard/classes' },
-    { name: 'Subjects', icon: <FileText size={20} />, path: '/dashboard/subjects' },
-    { name: 'Leave Management', icon: <Calendar size={20} />, path: '/dashboard/leaves' },
-    { name: 'Settings', icon: <Settings size={20} />, path: '/dashboard/settings' },
-  ];
+    { name: 'Overview', icon: <LayoutDashboard size={20} />, path: '/dashboard', roles: ['Admin', 'Teacher', 'Student', 'Parent', 'Accountant'] },
+    { name: 'Admissions', icon: <Users size={20} />, path: '/dashboard/admissions', roles: ['Admin'] },
+    { name: 'Students', icon: <GraduationCap size={20} />, path: '/dashboard/students', roles: ['Admin', 'Teacher'] },
+    { name: 'Teachers', icon: <Users size={20} />, path: '/dashboard/teachers', roles: ['Admin'] },
+    { name: 'Attendance', icon: <Calendar size={20} />, path: '/dashboard/attendance', roles: ['Admin', 'Teacher', 'Student'] },
+    { name: 'Academic Schedule', icon: <Clock size={20} />, path: '/dashboard/timetable', roles: ['Admin', 'Teacher', 'Student'] },
+    { name: 'Fees & Invoices', icon: <CreditCard size={20} />, path: '/dashboard/fees', roles: ['Admin', 'Accountant', 'Parent', 'Student'] },
+    { name: 'Academic Results', icon: <FileText size={20} />, path: '/dashboard/results', roles: ['Admin', 'Teacher', 'Student', 'Parent'] },
+    { name: 'Community Events', icon: <Star size={20} />, path: '/dashboard/events', roles: ['Admin', 'Teacher', 'Student', 'Parent'] },
+    { name: 'Classes', icon: <Users size={20} />, path: '/dashboard/classes', roles: ['Admin', 'Teacher'] },
+    { name: 'Subjects', icon: <FileText size={20} />, path: '/dashboard/subjects', roles: ['Admin'] },
+    { name: 'Leave Management', icon: <Calendar size={20} />, path: '/dashboard/leaves', roles: ['Admin', 'Teacher'] },
+    { name: 'User Management', icon: <Users size={20} />, path: '/dashboard/users', roles: ['Admin'] },
+    { name: 'Settings', icon: <Settings size={20} />, path: '/dashboard/settings', roles: ['Admin', 'Teacher', 'Student', 'Parent', 'Accountant'] },
+  ].filter(item => item.roles.includes(user?.role || 'Admin'));
 
   const handleLogout = () => {
     logout();

@@ -18,9 +18,35 @@ export const erpService = {
     };
   },
 
+  // Users & Roles
+  getRoles: async () => {
+    const response = await api.get('/roles');
+    return response.data;
+  },
+
+  getUsers: async (search?: string) => {
+    const response = await api.get('/users', { params: { search } });
+    return response.data;
+  },
+
+  updateUser: async (userId: string, data: any) => {
+    const response = await api.put(`/users/${userId}`, data);
+    return response.data;
+  },
+
+  deleteUser: async (userId: string) => {
+    const response = await api.delete(`/users/${userId}`);
+    return response.data;
+  },
+
   // Students
   getStudents: async (search?: string) => {
     const response = await api.get('/users', { params: { role: 'student', search } });
+    return response.data;
+  },
+
+  getTeachers: async (search?: string) => {
+    const response = await api.get('/users', { params: { role: 'teacher', search } });
     return response.data;
   },
 
@@ -63,6 +89,11 @@ export const erpService = {
     return response.data;
   },
 
+  updateClass: async (classId: string, data: any) => {
+    const response = await api.put(`/classes/${classId}`, data);
+    return response.data;
+  },
+
   // Invoices
   getInvoices: async () => {
     const response = await api.get('/invoices');
@@ -97,8 +128,18 @@ export const erpService = {
     return response.data;
   },
 
+  updateEvent: async (eventId: string, eventData: any) => {
+    const response = await api.put(`/events/${eventId}`, eventData);
+    return response.data;
+  },
+
   deleteEvent: async (eventId: string) => {
     const response = await api.delete(`/events/${eventId}`);
+    return response.data;
+  },
+
+  rsvpToEvent: async (eventId: string) => {
+    const response = await api.post(`/events/${eventId}/rsvp`);
     return response.data;
   },
 
@@ -126,6 +167,16 @@ export const erpService = {
   },
 
   // Classes & Subjects
+  getSubjects: async () => {
+    const response = await api.get('/subjects');
+    return response.data;
+  },
+
+  mapSubjectToClass: async (data: { class_id: string; subject_id: string; teacher_id?: string }) => {
+    const response = await api.post('/classroom-subjects', data);
+    return response.data;
+  },
+
   createClass: async (classData: any) => {
     const response = await api.post('/classes', classData);
     return response.data;

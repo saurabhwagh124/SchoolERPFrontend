@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Layers, Users, Hash, Loader2 } from 'lucide-react';
+import { X, Layers, Users, Hash, Loader2, Calendar, UserCheck } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
 import { erpService } from '../../services/erpService';
+import { useNotification } from '../ui/Notification';
 
 interface AddClassModalProps {
   isOpen: boolean;
@@ -11,12 +12,30 @@ interface AddClassModalProps {
 }
 
 export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { showNotification } = useNotification();
   const [submitting, setSubmitting] = useState(false);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     section: '',
-    capacity: '40'
+    capacity: '40',
+    academic_year: new Date().getFullYear().toString() + '-' + (new Date().getFullYear() + 1).toString().slice(-2),
+    class_teacher_id: ''
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchTeachers = async () => {
+        try {
+          const response = await erpService.getTeachers();
+          setTeachers(response.data || []);
+        } catch (error) {
+          console.error('Error fetching teachers:', error);
+        }
+      };
+      fetchTeachers();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +45,19 @@ export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, o
         ...formData,
         capacity: parseInt(formData.capacity)
       });
+      showNotification('Class created successfully!', 'success');
       onSuccess();
       onClose();
-      setFormData({ name: '', section: '', capacity: '40' });
+      setFormData({ 
+        name: '', 
+        section: '', 
+        capacity: '40', 
+        academic_year: new Date().getFullYear().toString() + '-' + (new Date().getFullYear() + 1).toString().slice(-2),
+        class_teacher_id: '' 
+      });
     } catch (error) {
       console.error('Error creating class:', error);
-      alert('Failed to create class. Please try again.');
+      showNotification('Failed to create class. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -52,7 +78,7 @@ export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, o
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 overflow-hidden"
+            className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden"
           >
             <div className="p-8 bg-brand-primary text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
@@ -62,25 +88,24 @@ export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, o
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-white/70 text-sm relative z-10">Create a new academic class and section.</p>
+              <p className="text-white/70 text-sm relative z-10">Create a new academic class and assign a class teacher.</p>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Layers size={16} className="text-brand-primary" /> Class Name
-                </label>
-                <input 
-                  type="text" 
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
-                  placeholder="e.g. 10th Standard"
-                />
-              </div>
-
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Layers size={16} className="text-brand-primary" /> Class Name
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
+                    placeholder="e.g. 10th Standard"
+                  />
+                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                     <Hash size={16} className="text-brand-primary" /> Section
@@ -92,6 +117,22 @@ export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, o
                     onChange={(e) => setFormData({...formData, section: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
                     placeholder="e.g. A"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Calendar size={16} className="text-brand-primary" /> Academic Year
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={formData.academic_year}
+                    onChange={(e) => setFormData({...formData, academic_year: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
+                    placeholder="2026-27"
                   />
                 </div>
                 <div className="space-y-2">
@@ -107,6 +148,22 @@ export const AddClassModal: React.FC<AddClassModalProps> = ({ isOpen, onClose, o
                     placeholder="40"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <UserCheck size={16} className="text-brand-primary" /> Class Teacher
+                </label>
+                <select 
+                  value={formData.class_teacher_id}
+                  onChange={(e) => setFormData({...formData, class_teacher_id: e.target.value})}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-primary outline-none transition-all"
+                >
+                  <option value="">Select a Teacher</option>
+                  {teachers.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex gap-4 pt-4">
