@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, UserCheck, Loader2, Plus, AlertCircle } from 'lucide-react';
+import { X, BookOpen, UserCheck, Loader2, AlertCircle } from 'lucide-react';
 import { StarButton } from '../ui/StarButton';
+import { CustomSelect } from '../ui/CustomSelect';
 import { erpService } from '../../services/erpService';
 import { useNotification } from '../ui/Notification';
 
@@ -94,36 +95,25 @@ export const AssignSubjectModal: React.FC<AssignSubjectModalProps> = ({ isOpen, 
             
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <BookOpen size={16} className="text-brand-secondary" /> Select Subject
-                </label>
-                <select 
-                  required
+                <CustomSelect
+                  label="Select Subject"
+                  icon={<BookOpen size={16} className="text-brand-secondary" />}
                   value={formData.subject_id}
-                  onChange={(e) => setFormData({...formData, subject_id: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-secondary outline-none transition-all"
-                >
-                  <option value="">Select a Subject</option>
-                  {subjects.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-                  ))}
-                </select>
+                  onChange={(val) => setFormData({...formData, subject_id: val})}
+                  placeholder="Select a Subject"
+                  options={subjects.map(s => ({ value: s.id, label: `${s.name} (${s.code})` }))}
+                />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <UserCheck size={16} className="text-brand-secondary" /> Subject Teacher (Optional)
-                </label>
-                <select 
+                <CustomSelect
+                  label="Subject Teacher (Optional)"
+                  icon={<UserCheck size={16} className="text-brand-secondary" />}
                   value={formData.teacher_id}
-                  onChange={(e) => setFormData({...formData, teacher_id: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-secondary outline-none transition-all"
-                >
-                  <option value="">Select a Teacher</option>
-                  {teachers.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
-                  ))}
-                </select>
+                  onChange={(val) => setFormData({...formData, teacher_id: val})}
+                  placeholder="Select a Teacher"
+                  options={teachers.map(t => ({ value: t.id, label: `${t.name} (${t.email})` }))}
+                />
               </div>
 
               <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
@@ -136,7 +126,8 @@ export const AssignSubjectModal: React.FC<AssignSubjectModalProps> = ({ isOpen, 
               <div className="flex gap-4 pt-4">
                 <StarButton variant="outline" className="flex-1" onClick={onClose} type="button">Cancel</StarButton>
                 <StarButton 
-                  className="flex-1 bg-brand-secondary text-brand-dark hover:bg-brand-secondary/90 shadow-lg shadow-brand-secondary/20 font-bold" 
+                  variant="secondary"
+                  className="flex-1 font-bold" 
                   type="submit" 
                   disabled={submitting}
                 >

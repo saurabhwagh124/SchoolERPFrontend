@@ -94,9 +94,13 @@ export const erpService = {
     return response.data;
   },
 
-  // Invoices
   getInvoices: async () => {
     const response = await api.get('/invoices');
+    return response.data;
+  },
+
+  getStudentInvoices: async (studentId: string) => {
+    const response = await api.get(`/invoices?student_id=${studentId}`);
     return response.data;
   },
 
@@ -184,6 +188,23 @@ export const erpService = {
 
   createSubject: async (subjectData: any) => {
     const response = await api.post('/subjects', subjectData);
+    return response.data;
+  },
+
+  assignStudentToClass: async (classId: string, studentIds: string | string[]) => {
+    const ids = Array.isArray(studentIds) ? studentIds : [studentIds];
+    const response = await api.post(`/classes/${classId}/students`, { student_ids: ids });
+    return response.data;
+  },
+
+  assignTeachersToClass: async (classId: string, teacherIds: string | string[]) => {
+    const ids = Array.isArray(teacherIds) ? teacherIds : [teacherIds];
+    const response = await api.post(`/classes/${classId}/teachers`, { teacher_ids: ids });
+    return response.data;
+  },
+
+  deleteClass: async (classId: string) => {
+    const response = await api.delete(`/classes/${classId}`);
     return response.data;
   }
 };

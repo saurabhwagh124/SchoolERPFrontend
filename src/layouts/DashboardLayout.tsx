@@ -51,16 +51,16 @@ export const DashboardLayout = () => {
       {/* Sidebar */}
       <aside className={`bg-white border-r border-slate-200 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'w-64' : 'w-20'
         }`}>
-        <div className={`flex items-center gap-3 border-b border-slate-100 transition-all duration-300 ${isSidebarOpen ? 'h-32 px-6' : 'h-20 px-4'}`}>
-          <img src={logo} alt="Little Star Logo" className={`${isSidebarOpen ? 'w-24 h-24' : 'w-12 h-12'} object-contain transition-all`} />
+        <div className={`flex items-center gap-3 border-b border-slate-100 transition-all duration-300 ${isSidebarOpen ? 'h-20 md:h-24 px-6' : 'h-20 px-4'}`}>
+          <img src={logo} alt="Little Star Logo" className={`${isSidebarOpen ? 'w-12 h-12 md:w-16 h-16' : 'w-12 h-12'} object-contain flex-shrink-0 transition-all`} />
           {isSidebarOpen && (
-            <span className="font-heading text-base font-bold bg-gradient-to-r from-slate-900 to-brand-primary bg-clip-text text-transparent leading-tight">
+            <span className="font-heading text-sm font-bold bg-gradient-to-r from-slate-900 to-brand-primary bg-clip-text text-transparent leading-tight">
               Little Star<br />Kids Academy
             </span>
           )}
         </div>
 
-        <nav className="flex-1 py-6 px-4 space-y-2">
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.name}
@@ -90,7 +90,7 @@ export const DashboardLayout = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
-        <header className="h-32 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+        <header className="h-20 md:h-24 bg-white border-b border-slate-200 flex items-center justify-between px-8">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}

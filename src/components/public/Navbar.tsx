@@ -22,11 +22,11 @@ export const Navbar = () => {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
-      <div className="container mx-auto px-6 h-32 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 group">
-          <img src={logo} alt="Little Star Logo" className="w-28 h-28 object-contain group-hover:scale-110 transition-transform" />
-          <span className="font-heading text-xl font-bold text-slate-900 leading-tight">
-            Little Star<br /><span className="text-xs text-brand-primary tracking-[0.2em] uppercase">Kids Academy</span>
+      <div className="container mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+          <img src={logo} alt="Little Star Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain flex-shrink-0 group-hover:scale-110 transition-transform" />
+          <span className="font-heading text-base md:text-xl font-bold text-slate-900 leading-tight">
+            Little Star<br /><span className="text-[10px] md:text-xs text-brand-primary tracking-[0.2em] uppercase">Kids Academy</span>
           </span>
         </Link>
 
@@ -75,7 +75,7 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden absolute top-20 w-full bg-white border-b border-slate-100 p-6 flex flex-col gap-4 shadow-xl animate-in slide-in-from-top duration-300">
+        <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-100 p-6 flex flex-col gap-4 shadow-xl animate-in slide-in-from-top duration-300">
           {navLinks.map((link) => (
             <Link
               key={link.name}

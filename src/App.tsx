@@ -22,6 +22,7 @@ import { Navigate } from 'react-router-dom';
 import { UsersPage } from './pages/dashboard/UsersPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
 import { TeachersPage } from './pages/dashboard/TeachersPage';
+import { StudentProfilePage } from './pages/dashboard/StudentProfilePage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -52,6 +53,7 @@ function App() {
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/dashboard/attendance" element={<AttendancePage />} />
           <Route path="/dashboard/students" element={<StudentsPage />} />
+          <Route path="/dashboard/students/:studentId" element={<StudentProfilePage />} />
           <Route path="/dashboard/teachers" element={<TeachersPage />} />
           <Route path="/dashboard/timetable" element={<TimetablePage />} />
           <Route path="/dashboard/fees" element={<FeesPage />} />

@@ -116,7 +116,7 @@ export const TimetablePage = () => {
                   </div>
                   <div>
                     <p className="text-slate-500 text-sm">Class Teacher</p>
-                    <p className="text-xl font-bold text-slate-900">{classDetails.teachers?.[0]?.name || 'N/A'}</p>
+                    <p className="text-xl font-bold text-slate-900">{classDetails.class_teacher_name || 'N/A'}</p>
                   </div>
                 </GlassCard>
                 <GlassCard className="bg-white border-none shadow-md p-6 flex items-center gap-4">

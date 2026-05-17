@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Layers, Plus, Users, Hash, MoreVertical, X, User, BookOpen, Clock, Calendar, CheckCircle, ChevronRight, GraduationCap, Bell, UserPlus, ShieldCheck, Settings, Trash2, Printer, UserCheck } from 'lucide-react';
+import { Search, Layers, Plus, Users, Hash, MoreVertical, X, BookOpen, Calendar, ChevronRight, Bell, UserPlus, ShieldCheck, Trash2, Printer, UserCheck, Loader2 } from 'lucide-react';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StarButton } from '../../components/ui/StarButton';
 import { erpService } from '../../services/erpService';
@@ -8,33 +8,47 @@ import { AddClassModal } from '../../components/erp/AddClassModal';
 import { AssignSubjectModal } from '../../components/erp/AssignSubjectModal';
 import { AssignStudentToClassModal } from '../../components/erp/AssignStudentToClassModal';
 import { AssignTeacherToClassModal } from '../../components/erp/AssignTeacherToClassModal';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import { useNotification } from '../../components/ui/Notification';
 
 export const ClassesPage = () => {
+  const { showNotification } = useNotification();
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAssignSubject, setShowAssignSubject] = useState(false);
   const [showAssignStudent, setShowAssignStudent] = useState(false);
   const [showAssignTeacher, setShowAssignTeacher] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'students' | 'schedule' | 'teachers'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'schedule' | 'teachers' | 'subjects'>('students');
   const [showExtraActions, setShowExtraActions] = useState(false);
+  const [loadingBackground, setLoadingBackground] = useState(false);
 
-  const fetchClasses = async () => {
-    setLoading(true);
+  const fetchClasses = async (isBackground = false) => {
+    if (isBackground) {
+      setLoadingBackground(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const response = await erpService.getClasses();
       setClasses(response.data || []);
     } catch (error) {
       console.error('Error fetching classes:', error);
+      showNotification('Failed to fetch classes.', 'error');
     } finally {
       setLoading(false);
+      setLoadingBackground(false);
     }
   };
 
   const handleViewDetails = async (classId: string) => {
+    const localClassObj = classes.find(c => c.id === classId) || { id: classId, name: 'Loading Class...', section: '...' };
+    setSelectedClass({ ...localClassObj, isSkeleton: true });
     setDetailLoading(true);
     try {
       const response = await erpService.getClassDetails(classId);
@@ -43,8 +57,25 @@ export const ClassesPage = () => {
       setShowExtraActions(false);
     } catch (error) {
       console.error('Error fetching class details:', error);
+      showNotification('Failed to fetch class details.', 'error');
+      setSelectedClass(null);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleDeleteClass = async () => {
+    if (!selectedClass) return;
+    try {
+      await erpService.deleteClass(selectedClass.id);
+      showNotification('Class deleted successfully!', 'success');
+      setSelectedClass(null);
+      fetchClasses();
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      showNotification('Failed to delete class.', 'error');
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -61,7 +92,22 @@ export const ClassesPage = () => {
   const timeSlots = ['08:00 AM', '09:30 AM', '11:00 AM', '12:30 PM', '02:00 PM'];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      {/* Background circular progress syncing notification */}
+      <AnimatePresence>
+        {loadingBackground && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-[250] bg-white/95 border border-slate-100 shadow-2xl px-5 py-3 rounded-full flex items-center gap-3 text-slate-600 text-xs font-bold uppercase tracking-wider backdrop-blur-md"
+          >
+            <div className="w-5 h-5 rounded-full border-2 border-slate-100 border-t-brand-primary animate-spin" />
+            <span>Updating Dashboard...</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold text-slate-900">Class Management</h1>
@@ -79,24 +125,57 @@ export const ClassesPage = () => {
       />
 
       {selectedClass && (
+        <AddClassModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => {
+            handleViewDetails(selectedClass.id);
+            fetchClasses();
+          }}
+          classToEdit={selectedClass}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Class"
+        message={`Are you sure you want to delete class ${selectedClass?.name}? This action is permanent and will remove all student/teacher links.`}
+        confirmLabel="Delete Class"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteClass}
+        onCancel={() => setShowDeleteConfirm(false)}
+        variant="danger"
+      />
+
+       {selectedClass && (
         <>
           <AssignSubjectModal
             isOpen={showAssignSubject}
             onClose={() => setShowAssignSubject(false)}
-            onSuccess={() => handleViewDetails(selectedClass.id)}
+            onSuccess={() => {
+              handleViewDetails(selectedClass.id);
+              fetchClasses(true);
+            }}
             classId={selectedClass.id}
             className={selectedClass.name}
           />
           <AssignStudentToClassModal
             isOpen={showAssignStudent}
             onClose={() => setShowAssignStudent(false)}
-            onSuccess={() => handleViewDetails(selectedClass.id)}
+            onSuccess={() => {
+              handleViewDetails(selectedClass.id);
+              fetchClasses(true);
+            }}
             classId={selectedClass.id}
+            currentStudentIds={selectedClass.students?.map((s: any) => s.id) || []}
           />
           <AssignTeacherToClassModal
             isOpen={showAssignTeacher}
             onClose={() => setShowAssignTeacher(false)}
-            onSuccess={() => handleViewDetails(selectedClass.id)}
+            onSuccess={() => {
+              handleViewDetails(selectedClass.id);
+              fetchClasses(true);
+            }}
             classId={selectedClass.id}
             className={selectedClass.name}
             currentTeacherId={selectedClass.class_teacher_id}
@@ -133,7 +212,24 @@ export const ClassesPage = () => {
 
         <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-full py-20 text-center text-slate-400">Loading classes...</div>
+            Array.from({ length: 6 }).map((_, idx) => (
+              <div 
+                key={idx} 
+                className="bg-white border border-slate-100 rounded-[2.5rem] p-8 animate-pulse flex flex-col justify-between h-[260px] shadow-sm"
+              >
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-100" />
+                    <div className="w-20 h-4 bg-slate-100 rounded" />
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <div className="h-6 w-3/4 bg-slate-100 rounded-lg" />
+                    <div className="h-4 w-1/2 bg-slate-100 rounded-md" />
+                  </div>
+                </div>
+                <div className="h-10 w-full bg-slate-100 rounded-xl mt-6" />
+              </div>
+            ))
           ) : filteredClasses.length === 0 ? (
             <div className="col-span-full py-20 text-center text-slate-400">No classes found.</div>
           ) : filteredClasses.map((cls, i) => (
@@ -169,13 +265,20 @@ export const ClassesPage = () => {
                 </div>
 
                 <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users size={16} className="text-slate-400" />
-                    <span className="text-sm font-bold text-slate-900">{cls.student_count || 0}</span>
-                    <span className="text-xs text-slate-400 font-medium">Students</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Users size={15} className="text-slate-400" />
+                      <span className="text-xs font-bold text-slate-900">{cls.student_count || 0}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">Students</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <BookOpen size={15} className="text-slate-400" />
+                      <span className="text-xs font-bold text-slate-900">{cls.subject_count || 0}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">Subjects</span>
+                    </div>
                   </div>
                   <div className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-1 rounded uppercase tracking-wider">
-                    {cls.capacity || 40} Capacity
+                    {cls.capacity || 40} Cap
                   </div>
                 </div>
               </GlassCard>
@@ -190,6 +293,25 @@ export const ClassesPage = () => {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedClass(null)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col" >
+              
+              {/* Circular Progress Loading Overlay */}
+              <AnimatePresence>
+                {detailLoading && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-white/75 backdrop-blur-md z-[150] flex flex-col items-center justify-center space-y-4"
+                  >
+                    <div className="relative">
+                      {/* Premium rotating dual circular ring loader */}
+                      <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-brand-primary border-b-brand-primary animate-spin" />
+                      <Layers className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand-primary animate-pulse" size={20} />
+                    </div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Class details...</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Header */}
               <div className="p-8 bg-brand-primary text-white relative">
@@ -217,15 +339,24 @@ export const ClassesPage = () => {
 
               {/* Quick Info Bar */}
               <div className="bg-slate-50 px-8 py-4 border-b border-slate-100 flex items-center gap-8 overflow-x-auto no-scrollbar">
-                <div className="flex items-center gap-3 shrink-0">
+                <div 
+                  onClick={() => setActiveTab('students')}
+                  className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-white hover:shadow-sm p-1.5 rounded-xl transition-all"
+                >
                   <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-primary"><Users size={20} /></div>
                   <div><p className="text-[10px] font-bold text-slate-400 uppercase">Students</p><p className="text-sm font-bold text-slate-900">{selectedClass.students?.length || 0} enrolled</p></div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-white hover:shadow-sm p-1 rounded-xl transition-all" onClick={() => setShowAssignTeacher(true)}>
+                <div 
+                  onClick={() => setActiveTab('teachers')}
+                  className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-white hover:shadow-sm p-1.5 rounded-xl transition-all"
+                >
                   <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-success"><ShieldCheck size={20} /></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 uppercase">Class Teacher</p><p className="text-sm font-bold text-slate-900">{selectedClass.teachers?.find((t: any) => t.id === selectedClass.class_teacher_id)?.name || 'Assign Now'}</p></div>
+                  <div><p className="text-[10px] font-bold text-slate-400 uppercase">Class Teacher</p><p className="text-sm font-bold text-slate-900">{selectedClass.class_teacher_name || 'Assign Now'}</p></div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div 
+                  onClick={() => setActiveTab('subjects')}
+                  className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-white hover:shadow-sm p-1.5 rounded-xl transition-all"
+                >
                   <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-brand-secondary"><BookOpen size={20} /></div>
                   <div><p className="text-[10px] font-bold text-slate-400 uppercase">Subjects</p><p className="text-sm font-bold text-slate-900">{selectedClass.subjects?.length || 0} allocated</p></div>
                 </div>
@@ -233,16 +364,17 @@ export const ClassesPage = () => {
                 <div className="ml-auto flex gap-2">
                   <StarButton
                     onClick={() => setShowAssignStudent(true)}
-                    variant="outline"
-                    className="px-4 py-2 text-[10px] h-10"
+                    variant="primary"
+                    className="px-4 py-2 text-xs flex items-center justify-center gap-2 h-10 rounded-xl shadow-md"
                   >
-                    <UserPlus size={14} className="mr-2" /> Add Student
+                    <UserPlus size={16} /> Assign Student
                   </StarButton>
                   <StarButton
                     onClick={() => setShowAssignSubject(true)}
-                    className="px-4 py-2 bg-brand-secondary/20 hover:bg-brand-secondary text-brand-dark rounded-xl text-[10px] font-bold transition-all flex items-center gap-2 h-10"
+                    variant="secondary"
+                    className="px-4 py-2 text-xs flex items-center justify-center gap-2 h-10 rounded-xl shadow-md"
                   >
-                    <Plus size={14} /> Assign Subject
+                    <Plus size={16} /> Assign Subject
                   </StarButton>
                 </div>
               </div>
@@ -250,7 +382,7 @@ export const ClassesPage = () => {
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
                 <div className="flex gap-2 mb-8 bg-slate-100 p-1.5 rounded-2xl w-fit">
-                  {(['students', 'schedule', 'teachers'] as const).map(tab => (
+                  {(['students', 'subjects', 'teachers', 'schedule'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -323,6 +455,44 @@ export const ClassesPage = () => {
                     </motion.div>
                   )}
 
+                  {activeTab === 'subjects' && (
+                    <motion.div key="subjects" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {selectedClass.subjects?.map((subject: any) => (
+                          <div key={subject.id} className="p-5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col justify-between hover:bg-white hover:shadow-md transition-all group">
+                            <div>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-brand-secondary/10 flex items-center justify-center text-brand-dark">
+                                  <BookOpen size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded">
+                                  {subject.code}
+                                </span>
+                              </div>
+                              <h4 className="font-bold text-slate-900 group-hover:text-brand-primary transition-colors text-base mb-1">{subject.name}</h4>
+                              <p className="text-[10px] text-slate-400 font-medium uppercase mb-4">{subject.category || 'General'}</p>
+                            </div>
+                            <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-[10px] font-bold text-brand-primary">
+                                {subject.teacher_name ? subject.teacher_name[0] : '?'}
+                              </div>
+                              <p className="text-xs text-slate-600 font-medium truncate">
+                                {subject.teacher_name || 'No Teacher Assigned'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {(!selectedClass.subjects || selectedClass.subjects.length === 0) && (
+                        <div className="text-center py-12 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                          <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
+                          <h4 className="text-lg font-bold text-slate-900 mb-1">No Subjects Allocated</h4>
+                          <p className="text-sm text-slate-500">Assign subjects to this class using the "Assign Subject" button above.</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
                   {activeTab === 'teachers' && (
                     <motion.div key="teachers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="grid md:grid-cols-2 gap-6">
                       {selectedClass.teachers?.map((teacher: any) => (
@@ -359,7 +529,13 @@ export const ClassesPage = () => {
               {/* Bottom Actions - reveal on tap pattern */}
               <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center relative">
                 <div className="flex gap-2">
-                  <StarButton variant="outline" className="px-6 py-2.5 text-xs">Edit Class</StarButton>
+                  <StarButton 
+                    variant="outline" 
+                    className="px-6 py-2.5 text-xs"
+                    onClick={() => setShowEditModal(true)}
+                  >
+                    Edit Class
+                  </StarButton>
                   <button
                     onClick={() => setShowExtraActions(!showExtraActions)}
                     className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all border ${showExtraActions ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'}`}
@@ -376,20 +552,32 @@ export const ClassesPage = () => {
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       className="absolute bottom-full left-8 mb-4 p-4 bg-white rounded-3xl shadow-2xl border border-slate-100 flex items-center gap-4 z-20"
                     >
-                      <button className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1 group">
+                      <button 
+                        onClick={() => { showNotification('Roll sheet prepared! Sending to printer...', 'success'); setShowExtraActions(false); }}
+                        className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1 group"
+                      >
                         <Printer size={20} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Print Roll</span>
                       </button>
-                      <button className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1">
+                      <button 
+                        onClick={() => { showNotification('Generating reports card deck...', 'success'); setShowExtraActions(false); }}
+                        className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1"
+                      >
                         <BookOpen size={20} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Reports</span>
                       </button>
-                      <button className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1">
+                      <button 
+                        onClick={() => { showNotification('Preparing to broadcast alert to students and guardians...', 'info'); setShowExtraActions(false); }}
+                        className="p-4 bg-slate-50 rounded-2xl text-slate-600 hover:bg-brand-primary/10 hover:text-brand-primary transition-all flex flex-col items-center gap-1"
+                      >
                         <Bell size={20} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Alert All</span>
                       </button>
                       <div className="w-px h-12 bg-slate-100 mx-2" />
-                      <button className="p-4 bg-rose-50 rounded-2xl text-rose-500 hover:bg-rose-100 transition-all flex flex-col items-center gap-1">
+                      <button 
+                        onClick={() => { setShowDeleteConfirm(true); setShowExtraActions(false); }}
+                        className="p-4 bg-rose-50 rounded-2xl text-rose-500 hover:bg-rose-100 transition-all flex flex-col items-center gap-1"
+                      >
                         <Trash2 size={20} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
                       </button>
@@ -410,35 +598,6 @@ export const ClassesPage = () => {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Loading Overlay for details */}
-      <AnimatePresence>
-        {detailLoading && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
-            <div className="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4">
-              <Loader2 className="animate-spin text-brand-primary" size={40} />
-              <p className="text-sm font-bold text-slate-900 uppercase tracking-widest">Fetching Class Details...</p>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
-
-const Loader2 = ({ size, className }: { size?: number, className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size || 24}
-    height={size || 24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-);

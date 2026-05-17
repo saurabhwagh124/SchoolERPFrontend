@@ -10,15 +10,16 @@ interface CollectFeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  studentId?: string;
 }
 
-export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClose, onSuccess, studentId }) => {
   const { showNotification } = useNotification();
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    student_id: '',
+    student_id: studentId || '',
     amount: '',
     payment_method: 'cash',
     payment_date: new Date().toISOString().split('T')[0],
@@ -27,6 +28,13 @@ export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClos
 
   useEffect(() => {
     if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        student_id: studentId || '',
+        amount: '',
+        remarks: ''
+      }));
+
       const fetchStudents = async () => {
         setLoading(true);
         try {
@@ -40,7 +48,7 @@ export const CollectFeeModal: React.FC<CollectFeeModalProps> = ({ isOpen, onClos
       };
       fetchStudents();
     }
-  }, [isOpen]);
+  }, [isOpen, studentId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
